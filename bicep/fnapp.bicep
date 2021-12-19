@@ -1,4 +1,3 @@
-targetScope = 'resourceGroup'
 
 param fnAppName string
 
@@ -13,7 +12,6 @@ resource fnAsp 'Microsoft.Web/serverfarms@2021-02-01' = {
   name: '${fnAppName}-asp'
   location: resourceGroup().location
   sku: {
-    // S1 is the minimum tier that supports VNet integration
     name: 'S1'
   }
 }
