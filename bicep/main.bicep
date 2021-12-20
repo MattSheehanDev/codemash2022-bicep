@@ -79,6 +79,32 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
                 resourceGroup().location
               ]
             }
+          ]
+          // Delegation just means that the App Service Plan has permission
+          // to create service specific resources in the subnet.
+          delegations: [
+            {
+              name: 'Microsoft.web.serverFarms'
+              properties: {
+                serviceName: 'Microsoft.Web/serverFarms'
+              }
+            }
+          ]
+        }
+      }
+      // Subnet for Function App.
+      // Function Apps require a delegated subnet.
+      {
+        name: '${namePrefix}-fn-subnet'
+        properties: {
+          addressPrefix: '10.0.2.0/24'
+          serviceEndpoints: [
+            {
+              service: 'Microsoft.Web'
+              locations: [
+                resourceGroup().location
+              ]
+            }
             {
               service: 'Microsoft.Storage'
               locations: [
@@ -86,8 +112,6 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
               ]
             }
           ]
-          // Delegation just means that the App Service Plan has permission
-          // to create service specific resources in the subnet.
           delegations: [
             {
               name: 'Microsoft.web.serverFarms'
@@ -102,13 +126,15 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
   }
 }
 
-// This a reference to the subnet created above.
-// Because it references the vnet as it's parent,
-// it is guaranteed to exist before referencing.
-resource appSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-03-01' existing = {
-  parent: vnet
-  name: '${namePrefix}-app-subnet'
-}
+// // This a reference to the subnet created above.
+// // Because it references the vnet as it's parent,
+// // it is guaranteed to exist before referencing.
+// resource appSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-03-01' existing = {
+//   parent: vnet
+//   name: '${namePrefix}-app-subnet'
+// }
+var appSubnet = vnet.properties.subnets[0]
+var fnSubnet = vnet.properties.subnets[1]
 
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2021-02-01' = {
@@ -131,11 +157,13 @@ resource appService 'Microsoft.Web/sites@2021-02-01' = {
     // Referencing the appServicePlan adds an implicit dependency,
     // the app service plan is guaranteed to be deployed before the app service.
     serverFarmId: appServicePlan.id
-    virtualNetworkSubnetId: vnet.properties.subnets[0].id // appSubnet.id
+    virtualNetworkSubnetId: appSubnet.id
   }
 }
 
 
+// This a reference to that has already been created
+// in a different resource group.
 resource kv 'Microsoft.KeyVault/vaults@2021-06-01-preview' existing = {
   name: 'kv-bicep-deployment'
   scope: resourceGroup('kv-bicep-rg')
@@ -156,24 +184,10 @@ module sql 'sql.bicep' = {
 }
 
 
-// resource stg 'Microsoft.Storage/storageAccounts@2021-06-01' = {
-//   name: '${env}cmstg'
-//   location: resourceGroup().location
-//   identity: {
-//     type: 'SystemAssigned'
-//   }
-//   sku: {
-//     name: 'Standard_LRS'
-//   }
-//   kind: 'StorageV2'
-//   properties: {
-//     networkAcls: {
-//       defaultAction: 'Deny'
-//       virtualNetworkRules: [
-//         {
-//           id: appSubnet.id
-//         }
-//       ]
-//     }
-//   }
-// }
+module func 'fnapp.bicep' = {
+  name: '${namePrefix}FnAppDeploy'
+  params: {
+    fnAppName: '${namePrefix}fnapp'
+    subnetId: fnSubnet.id
+  }
+}
