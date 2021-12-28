@@ -78,7 +78,6 @@ resource fnApp 'Microsoft.Web/sites@2021-02-01' = {
         //   name: 'AzureWebJobsStorage'
         //   value: stgConnectionStr
         // }
-        // TODO:
         {
           name: 'AzureWebJobsStorage_accountName'
           value: fnStg.name

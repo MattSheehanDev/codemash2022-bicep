@@ -126,13 +126,7 @@ resource vnet 'Microsoft.Network/virtualNetworks@2021-03-01' = {
   }
 }
 
-// // This a reference to the subnet created above.
-// // Because it references the vnet as it's parent,
-// // it is guaranteed to exist before referencing.
-// resource appSubnet 'Microsoft.Network/virtualNetworks/subnets@2021-03-01' existing = {
-//   parent: vnet
-//   name: '${namePrefix}-app-subnet'
-// }
+
 var appSubnet = vnet.properties.subnets[0]
 var fnSubnet = vnet.properties.subnets[1]
 
