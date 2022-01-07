@@ -57,3 +57,5 @@ resource vnetRule 'Microsoft.Sql/servers/virtualNetworkRules@2021-05-01-preview'
     virtualNetworkSubnetId: rule.subnetId
   }
 }]
+
+output sqlServerName string = sqlServer.name

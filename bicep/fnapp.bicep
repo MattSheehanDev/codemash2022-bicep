@@ -31,8 +31,6 @@ resource fnStg 'Microsoft.Storage/storageAccounts@2021-06-01' = {
   }
 }
 
-// var stgKey = listKeys(fnStg.name, fnStg.apiVersion).keys[0].value
-// var stgConnectionStr = 'DefaultEndpointsProtocol=https;AccountName=${fnStg.name};AccountKey=${stgKey};EndpointSuffix=${environment().suffixes.storage}'
 
 resource fnAsp 'Microsoft.Web/serverfarms@2021-02-01' = {
   name: '${fnAppName}-asp'
